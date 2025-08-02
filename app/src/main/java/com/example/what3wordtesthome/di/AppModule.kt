@@ -7,6 +7,7 @@ import com.example.what3wordtesthome.data.remote.NetworkApi
 import com.example.what3wordtesthome.domain.repository.MovieRepository
 import com.example.what3wordtesthome.domain.repository.MovieRepositoryImpl
 import com.example.what3wordtesthome.domain.usecase.GetTrendingMoviesUseCase
+import com.example.what3wordtesthome.domain.usecase.SearchMoviesUseCase
 import com.example.what3wordtesthome.presentation.MovieViewModel
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -56,10 +57,16 @@ val appModule = module {
         )
     }
 
-    viewModel { MovieViewModel(get()) }
+    viewModel { MovieViewModel(get(), get()) }
 
     single {
         GetTrendingMoviesUseCase(
+            get(),
+        )
+    }
+
+    single {
+        SearchMoviesUseCase(
             get(),
         )
     }

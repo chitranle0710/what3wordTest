@@ -18,6 +18,9 @@ interface NetworkApi {
     @Headers("Authorization: $AUTH_HEADER")
     @GET("search/movie")
     suspend fun searchMovies(
-        @Query("query") query: String
-    ): MovieDto
+        @Query("query") query: String,
+        @Query("include_adult") includeAdult: Boolean = false,
+        @Query("language") language: String = "en-US",
+        @Query("page") page: Int = 1
+    ): TrendingMoviesResponse
 }

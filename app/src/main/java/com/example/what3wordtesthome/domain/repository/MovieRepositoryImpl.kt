@@ -42,7 +42,6 @@ class MovieRepositoryImpl(
             }
         }
 
-        // Fetch from API
         val response = api.getTrendingMovies()
         val movies = response.results.map { dto ->
             Movie(
@@ -64,21 +63,41 @@ class MovieRepositoryImpl(
             )
         }
 
-        // Save to DB
         dao.clearTrending()
         dao.insertTrending(movies.map {
             TrendingMovieEntity(
                 title = it.title,
                 releaseYear = it.release_date,
-                id = 0,
+                id = it.id,
                 voteAverage = it.vote_average,
                 imageUrl = it.poster_path
             )
         })
 
-        // Update cache timestamp
         cacheDataStore.setTrendingLastFetchTime(now)
 
         return movies
+    }
+
+    override suspend fun searchMovies(query: String): List<Movie> {
+        return api.searchMovies(query).results.map { dto ->
+            Movie(
+                adult = dto.adult,
+                backdrop_path = dto.backdrop_path,
+                id = dto.id,
+                title = dto.title,
+                original_title = dto.original_title,
+                overview = dto.overview,
+                poster_path = dto.poster_path,
+                media_type = dto.media_type,
+                original_language = dto.original_language,
+                genre_ids = dto.genre_ids,
+                popularity = dto.popularity,
+                release_date = dto.release_date,
+                video = dto.video,
+                vote_average = dto.vote_average,
+                vote_count = dto.vote_count
+            )
+        }
     }
 }
