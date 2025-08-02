@@ -5,14 +5,43 @@ import androidx.paging.PagingState
 import com.example.what3wordtesthome.data.remote.NetworkApi
 import com.example.what3wordtesthome.domain.model.Movie
 
+/**
+ * A [PagingSource] implementation to fetch paginated movie search results
+ * from the TMDB API based on a user-provided query.
+ *
+ * This enables efficient loading of large lists of movie search results,
+ * by requesting data in pages from the remote [NetworkApi].
+ *
+ * @property api The API client to perform the network search requests.
+ * @property query The search query string entered by the user.
+ */
 class SearchMoviePagingSource(
     private val api: NetworkApi,
     private val query: String
 ) : PagingSource<Int, Movie>() {
+
+    /**
+     * Provides a refresh key to reload the data from a specific position.
+     *
+     * This implementation always refreshes from the first page.
+     *
+     * @param state The current paging state including loaded pages and anchor position.
+     * @return The key from which to start loading when refreshing.
+     */
     override fun getRefreshKey(state: PagingState<Int, Movie>): Int? {
         return 1
     }
 
+    /**
+     * Loads a page of movie data based on the given [params].
+     *
+     * Calls the API to fetch a page of results for the search [query], then maps
+     * the DTOs to [Movie] domain models. If an error occurs during the API call,
+     * it returns [LoadResult.Error].
+     *
+     * @param params The parameters for loading data, including the key (page number).
+     * @return A [LoadResult.Page] with movies and pagination keys, or [LoadResult.Error].
+     */
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
         return try {
             val page = params.key ?: 1

@@ -63,10 +63,8 @@ class MainActivity : ComponentActivity() {
                         composable(
                             route = Screen.MovieDetail.route,
                             arguments = listOf(navArgument("movieId") { type = NavType.IntType })
-                        ) { backStackEntry ->
-                            val movieId =
-                                backStackEntry.arguments?.getInt("movieId") ?: return@composable
-                            MovieDetailScreen(movieId = movieId)
+                        ) {
+                            MovieDetailScreen(movieId = it.arguments?.getInt("movieId") ?: -1)
                         }
                     }
                 }

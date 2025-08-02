@@ -22,6 +22,18 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
+/**
+ * Implementation of [MovieRepository] that handles fetching movie data from both
+ * remote (TMDB API) and local sources (Room database).
+ *
+ * It supports caching of trending movies, searching with paging, and offline access
+ * to viewed movie details.
+ *
+ * @param api The network API for remote data operations.
+ * @param dao The DAO for local database interactions.
+ * @param cacheDataStore For storing metadata like last fetch timestamps.
+ */
+
 class MovieRepositoryImpl(
     private val api: NetworkApi,
     private val dao: MovieDao,

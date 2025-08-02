@@ -1,5 +1,6 @@
 package com.example.what3wordtesthome.di
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import com.example.what3wordtesthome.data.local.AppDatabase
 import com.example.what3wordtesthome.data.local.cache.MovieCacheDataStore
@@ -62,7 +63,9 @@ val appModule = module {
     }
 
     viewModel { MovieViewModel(get(), get(), get(), get(), get()) }
-    viewModel { MovieDetailViewModel(get()) }
+    viewModel { (movieId: Int) ->
+        MovieDetailViewModel(get(), SavedStateHandle(mapOf("movieId" to movieId)))
+    }
     single {
         GetTrendingMoviesUseCase(
             get(),
