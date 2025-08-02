@@ -1,5 +1,6 @@
 package com.example.what3wordtesthome.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -11,6 +12,9 @@ import com.example.what3wordtesthome.data.local.entity.TrendingMovieEntity
 interface MovieDao {
     @Query("SELECT * FROM TrendingMovie")
     suspend fun getTrending(): List<TrendingMovieEntity>
+
+    @Query("SELECT * FROM TrendingMovie")
+    fun getTrendingPagingSource(): PagingSource<Int, TrendingMovieEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrending(movies: List<TrendingMovieEntity>)

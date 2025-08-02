@@ -1,7 +1,10 @@
 package com.example.what3wordtesthome.data.remote
 
+import com.example.what3wordtesthome.data.remote.response.MovieDetailResponse
+import com.example.what3wordtesthome.data.remote.response.TrendingMoviesResponse
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface NetworkApi {
@@ -23,4 +26,10 @@ interface NetworkApi {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1
     ): TrendingMoviesResponse
+
+    @Headers("Authorization: $AUTH_HEADER")
+    @GET("movie/{movie_id}")
+    suspend fun getMovieDetail(
+        @Path("movie_id") id: Int
+    ): MovieDetailResponse
 }

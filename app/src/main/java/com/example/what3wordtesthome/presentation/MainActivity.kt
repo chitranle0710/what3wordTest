@@ -1,5 +1,6 @@
 package com.example.what3wordtesthome.presentation
 
+import MovieDetailScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,23 +16,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.example.what3wordtesthome.domain.model.Movie
+import com.example.what3wordtesthome.presentation.viewModel.MovieViewModel
 import com.example.what3wordtesthome.ui.theme.What3wordTestHomeTheme
 import org.koin.androidx.compose.koinViewModel
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,27 +45,33 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             What3wordTestHomeTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MovieScreen(modifier = Modifier.padding(innerPadding))
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screen.MovieList.route,
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+                        composable(Screen.MovieList.route) {
+                            MovieScreen(
+                                onMovieClick = { movieId ->
+                                    navController.navigate(Screen.MovieDetail.createRoute(movieId))
+                                }
+                            )
+                        }
+
+                        composable(
+                            route = Screen.MovieDetail.route,
+                            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+                        ) { backStackEntry ->
+                            val movieId =
+                                backStackEntry.arguments?.getInt("movieId") ?: return@composable
+                            MovieDetailScreen(movieId = movieId)
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    What3wordTestHomeTheme {
-        Greeting("Android")
     }
 }
 
@@ -69,20 +81,15 @@ fun MovieScreen(
     viewModel: MovieViewModel = koinViewModel(),
     onMovieClick: (Int) -> Unit = {}
 ) {
-    val movies by viewModel.uiState.collectAsState()
+    val movies = viewModel.pagingMoviesFlow.collectAsLazyPagingItems()
     val query by viewModel.searchQuery.collectAsState()
     val header by viewModel.headerTitle.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadTrending()
-    }
 
     Column(modifier = modifier.padding(16.dp)) {
         OutlinedTextField(
             value = query,
             onValueChange = { viewModel.onSearchQueryChanged(it) },
-            placeholder = { Text("Search movies...") }, // ✅ Placeholder instead of label
-
+            placeholder = { Text("Search movies...") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -91,8 +98,17 @@ fun MovieScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn {
-            items(movies) { movie ->
-                MovieListItem(movie = movie, onClick = { onMovieClick(movie.id) })
+            items(movies.itemCount) { index ->
+                val movie = movies[index]
+                movie?.let {
+                    MovieListItem(movie = it, onClick = { onMovieClick(it.id) })
+                }
+            }
+
+            when (movies.loadState.append) {
+                is LoadState.Loading -> item { Text("Loading more...") }
+                is LoadState.Error -> item { Text("Error loading more") }
+                else -> {}
             }
         }
     }

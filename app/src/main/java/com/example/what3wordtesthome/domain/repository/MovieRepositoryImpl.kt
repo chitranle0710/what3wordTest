@@ -1,13 +1,25 @@
 package com.example.what3wordtesthome.domain.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.example.what3wordtesthome.data.local.cache.MovieCacheDataStore
 import com.example.what3wordtesthome.data.local.dao.MovieDao
 import com.example.what3wordtesthome.data.local.entity.TrendingMovieEntity
 import com.example.what3wordtesthome.data.remote.NetworkApi
+import com.example.what3wordtesthome.data.remote.paging.SearchMoviePagingSource
 import com.example.what3wordtesthome.domain.model.Movie
+import com.example.what3wordtesthome.domain.model.MovieDetail
+import com.example.what3wordtesthome.domain.model.toDto
+import com.example.what3wordtesthome.domain.model.toEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 class MovieRepositoryImpl(
@@ -25,7 +37,6 @@ class MovieRepositoryImpl(
     override suspend fun getTrendingMovies(): List<Movie> = cacheMutex.withLock {
         val lastFetch = cacheDataStore.trendingLastFetchTime.first()
         val now = System.currentTimeMillis()
-
         val useCache = lastFetch != null && (now - lastFetch) < CACHE_EXPIRY_MILLIS
 
         if (useCache) {
@@ -75,7 +86,6 @@ class MovieRepositoryImpl(
         })
 
         cacheDataStore.setTrendingLastFetchTime(now)
-
         return movies
     }
 
@@ -99,5 +109,44 @@ class MovieRepositoryImpl(
                 vote_count = dto.vote_count
             )
         }
+    }
+
+    override suspend fun searchMoviesPagingOnline(query: String): Flow<PagingData<Movie>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = { SearchMoviePagingSource(api, query) }
+        ).flow
+    }
+
+    override suspend fun getTrendingPagingSourceOffline(): Flow<PagingData<Movie>> {
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = { dao.getTrendingPagingSource() }
+        ).flow.map { pagingData ->
+            pagingData.map { entity ->
+                Movie(
+                    id = entity.id,
+                    title = entity.title,
+                    release_date = entity.releaseYear,
+                    vote_average = entity.voteAverage,
+                    poster_path = entity.imageUrl
+                )
+            }
+        }
+    }
+
+    override suspend fun getMovieDetail(query: String): MovieDetail = withContext(Dispatchers.IO) {
+        val movieId = query.toInt()
+
+        val cached = dao.getMovieDetail(movieId)
+        if (cached != null) {
+            return@withContext cached.toDto()
+        }
+
+        val responseDetailMovie = api.getMovieDetail(movieId)
+        val entityTrendingMovie = responseDetailMovie.toEntity()
+        dao.insertMovieDetail(entityTrendingMovie)
+
+        return@withContext entityTrendingMovie.toDto()
     }
 }

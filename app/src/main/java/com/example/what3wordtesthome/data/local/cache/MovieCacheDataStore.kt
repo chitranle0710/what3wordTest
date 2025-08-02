@@ -25,10 +25,4 @@ class MovieCacheDataStore(context: Context) {
             prefs[LAST_FETCH_TIME] = timestamp
         }
     }
-
-    suspend fun clearTrendingLastFetchTime() {
-        dataStore.edit { prefs ->
-            prefs.remove(LAST_FETCH_TIME)
-        }
-    }
 }

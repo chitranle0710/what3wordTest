@@ -6,9 +6,13 @@ import com.example.what3wordtesthome.data.local.cache.MovieCacheDataStore
 import com.example.what3wordtesthome.data.remote.NetworkApi
 import com.example.what3wordtesthome.domain.repository.MovieRepository
 import com.example.what3wordtesthome.domain.repository.MovieRepositoryImpl
+import com.example.what3wordtesthome.domain.usecase.GetMovieDetailUseCase
+import com.example.what3wordtesthome.domain.usecase.GetTrendingMovieOfflinePagingUseCase
+import com.example.what3wordtesthome.domain.usecase.GetTrendingMovieOnlinePagingUseCase
 import com.example.what3wordtesthome.domain.usecase.GetTrendingMoviesUseCase
 import com.example.what3wordtesthome.domain.usecase.SearchMoviesUseCase
-import com.example.what3wordtesthome.presentation.MovieViewModel
+import com.example.what3wordtesthome.presentation.movieDetail.MovieDetailViewModel
+import com.example.what3wordtesthome.presentation.viewModel.MovieViewModel
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidApplication
@@ -57,8 +61,8 @@ val appModule = module {
         )
     }
 
-    viewModel { MovieViewModel(get(), get()) }
-
+    viewModel { MovieViewModel(get(), get(), get(), get(), get()) }
+    viewModel { MovieDetailViewModel(get()) }
     single {
         GetTrendingMoviesUseCase(
             get(),
@@ -66,7 +70,25 @@ val appModule = module {
     }
 
     single {
+        GetTrendingMovieOnlinePagingUseCase(
+            get(),
+        )
+    }
+
+    single {
         SearchMoviesUseCase(
+            get(),
+        )
+    }
+
+    single {
+        GetTrendingMovieOfflinePagingUseCase(
+            get(),
+        )
+    }
+
+    single {
+        GetMovieDetailUseCase(
             get(),
         )
     }

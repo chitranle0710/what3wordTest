@@ -1,4 +1,4 @@
-package com.example.what3wordtesthome.data.remote
+package com.example.what3wordtesthome.data.remote.response
 
 data class TrendingMoviesResponse(
     val page: Int,
