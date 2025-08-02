@@ -87,7 +87,7 @@ KMM setup and SQLDelight caching would be explored further if more time and IDE 
 
 ## 👨‍💻 Author
 
-Created by **[Your Name]**  
+Created by **[Chi Tran]**  
 For the **What3Words Android Tech Test 2025**  
 Licensed under the MIT License.
 
